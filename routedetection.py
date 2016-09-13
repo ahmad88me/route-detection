@@ -3,6 +3,7 @@ from sparqlq import run_sparql_query
 from clust import do_clustering
 from operator import itemgetter
 import pandas as pd
+import sys
 
 def fetch_data_from_endpoint():
     query = """
@@ -125,9 +126,10 @@ def save_data_as_csv(data, fname):
     f.close()
 
 
-def tab_separated_to_csv():
+def tab_separated_to_csv(inputfile, intermediate_file):
     data = []
-    fname = "crtm-linea447.txt"
+    #fname = "crtm-linea447.txt"
+    fname = inputfile
     with open(fname, "r") as f:
         for idx, line in enumerate(f.readlines()):
             if idx%2==0:
@@ -140,7 +142,8 @@ def tab_separated_to_csv():
             #print "station: "+station+", time: "+timestring
             data.append([station, timestring])
     clean_data = clean_the_data(data)
-    with open("data_line_447.csv", "w") as f:
+    #with open("data_line_447.csv", "w") as f:
+    with open(intermediate_file, "w") as f:
         for d in clean_data:
             f.write(str(d[0])+", "+str(d[1])+"\n")
 
@@ -150,7 +153,7 @@ def print_data_frames(data):
         print d[1].values
 
 
-def get_duration_between_stations(data):
+def get_duration_between_stations(data, outputfile):
     dur = {}
     for idx, d in enumerate(data[:-1]):
         if d[0] not in dur:
@@ -163,7 +166,8 @@ def get_duration_between_stations(data):
         # dur[data[idx+1][0]][d[0]] = data[idx+1][1] - d[1]
     print "dur: "
     print dur
-    with open("durations.csv", "w") as f:
+    with open(outputfile, "w") as f:
+    #with open("durations.csv", "w") as f:
         f.write(" ___ ")
         for header in dur.keys():
             f.write(", "+str(header))
@@ -185,15 +189,23 @@ def main():
     #data = fetch_data_from_endpoint()
     # This is to save the data to a csv file
     #save_data_as_csv(data, "data_line_447_clean.csv")
-    data = pd.read_csv("data_line_447.csv")
-    #tab_separated_to_csv()
+    print sys.argv
+    if len(sys.argv) != 3:
+        print "please specify the input and output files"
+        return
+    inputfile = sys.argv[1]
+    outfile = sys.argv[2]
+    intermediate_file = "clean.csv"
+    tab_separated_to_csv(inputfile, intermediate_file)
+    data = pd.read_csv(intermediate_file)
+    # data = pd.read_csv("data_line_447.csv")
     #print_sparql_result(data)
     print_data_frames(data)
     data = get_only_first_validation_dataframe(data)
     # data = buses_as_seq_ints(data)
     # clean_data = clean_the_data(data)
     # print_sparql_result(clean_data)
-    get_duration_between_stations(data)
+    get_duration_between_stations(data, outputfile=outfile)
     do_clustering(data)
 
 main()
