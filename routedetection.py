@@ -2,6 +2,7 @@
 from sparqlq import run_sparql_query
 from clust import do_clustering
 from operator import itemgetter
+import pandas as pd
 
 def fetch_data_from_endpoint():
     query = """
@@ -77,6 +78,21 @@ def get_only_first_validation(data):
     return clean_data
 
 
+def get_only_first_validation_dataframe(data):
+    station_dict = {}
+    for d in data.iterrows():
+        if d[1][0] in station_dict:
+            station_dict[d[1][0]] = min(d[1][1], station_dict[d[1][0]])
+        else:
+            station_dict[d[1][0]] = d[1][1]
+    clean_data = station_dict.items()
+    clean_data = sorted(clean_data, key=itemgetter(1))
+    print "\n\n\nclean data:*************"
+    print clean_data
+    return clean_data
+
+
+
 def clean_the_data(data):
     """
     :param data: two dimensional each row contain a bus station and a timestamp
@@ -99,16 +115,55 @@ def clean_the_data(data):
         #     continue
         clean_data.append([new_station, new_time])
     # clean_data = buses_as_seq_ints(clean_data)
-    clean_data = get_only_first_validation(clean_data)
+    # clean_data = get_only_first_validation(clean_data)
     return clean_data
 
 
+def save_data_as_csv(data, fname):
+    f = open(fname, "w")
+    for d in data:
+        f.write(d[0]+", "+d[1]+"\n")
+    f.close()
+
+
+def tab_separated_to_csv():
+    data = []
+    fname = "crtm-linea447.txt"
+    with open(fname, "r") as f:
+        for idx, line in enumerate(f.readlines()):
+            if idx%2==0:
+                # print "skip: "+str(line)
+                continue
+            else:
+                print "line: "+str(line)
+            #print len(line.split('\t'))
+            _, station, timestring = line.split('\t')
+            #print "station: "+station+", time: "+timestring
+            data.append([station, timestring])
+    clean_data = clean_the_data(data)
+    with open("data_line_447.csv", "w") as f:
+        for d in clean_data:
+            f.write(str(d[0])+", "+str(d[1])+"\n")
+
+
+def print_data_frames(data):
+    for d in data.iterrows():
+        print d[1].values
+
+
 def main():
-    res = fetch_data_from_endpoint()
-    # print_sparql_result(res)
-    clean_data = clean_the_data(res)
-    print_sparql_result(clean_data)
-    do_clustering(clean_data)
+    # This is to fetch the data from the sparql endpoint
+    #data = fetch_data_from_endpoint()
+    # This is to save the data to a csv file
+    #save_data_as_csv(data, "data_line_447_clean.csv")
+    data = pd.read_csv("data_line_447.csv")
+    #tab_separated_to_csv()
+    #print_sparql_result(data)
+    print_data_frames(data)
+    data = get_only_first_validation_dataframe(data)
+    #clean_data = clean_the_data(data)
+    #print_sparql_result(clean_data)
+    do_clustering(data)
 
 
 main()
