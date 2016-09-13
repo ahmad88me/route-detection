@@ -31,6 +31,10 @@ def do_clustering(data):
     for clus in range(num_of_clusters):
         y, x = model.cluster_centers_[clus]
         plt.scatter([x], [y], c=colors[clus], marker="x", s=80)
+    for bus, time_string in data:
+        plt.annotate(bus, (time_string, bus))
+    for idx, xy in enumerate(data[:-1]):
+        plt.plot([data[idx][1], data[idx+1][1]], [data[idx][0], data[idx+1][0]])
     #plt.scatter(bus_station_axis, time_axis)
     plt.show()
 

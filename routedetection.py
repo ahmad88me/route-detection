@@ -157,22 +157,26 @@ def get_duration_between_stations(data):
             dur[d[0]] = {}
         if data[idx+1][0] not in dur:
             dur[data[idx+1][0]] = {}
-        print "d1: %d" % d[1]
-        print "data idx: %d" % data[idx+1][1]
-        dur[d[0]][data[idx+1][0]] = abs(d[1] - data[idx+1][1])
-        dur[data[idx+1][0]][d[0]] = abs(d[1] - data[idx+1][1])
+        #print "d1: %d" % d[1]
+        #print "data idx: %d" % data[idx+1][1]
+        dur[d[0]][data[idx+1][0]] = data[idx+1][1] - d[1]
+        # dur[data[idx+1][0]][d[0]] = data[idx+1][1] - d[1]
+    print "dur: "
+    print dur
     with open("durations.csv", "w") as f:
         f.write(" ___ ")
         for header in dur.keys():
             f.write(", "+str(header))
+        f.write("\n")
         for d in dur:
             for idx, r in enumerate(dur):
+                # print "d: "+str(d)+", r: "+str(r)
                 if idx==0:
-                    f.write(str(r))
+                    f.write(str(d))
                 if r in dur[d]:
                     f.write(", "+str(dur[d][r]))
                 else:
-                    f.write(", 0")
+                    f.write(", x")
             f.write("\n")
 
 
@@ -189,8 +193,7 @@ def main():
     # data = buses_as_seq_ints(data)
     # clean_data = clean_the_data(data)
     # print_sparql_result(clean_data)
-    # do_clustering(data)
     get_duration_between_stations(data)
-
+    do_clustering(data)
 
 main()
