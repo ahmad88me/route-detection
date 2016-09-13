@@ -92,7 +92,6 @@ def get_only_first_validation_dataframe(data):
     return clean_data
 
 
-
 def clean_the_data(data):
     """
     :param data: two dimensional each row contain a bus station and a timestamp
@@ -151,6 +150,32 @@ def print_data_frames(data):
         print d[1].values
 
 
+def get_duration_between_stations(data):
+    dur = {}
+    for idx, d in enumerate(data[:-1]):
+        if d[0] not in dur:
+            dur[d[0]] = {}
+        if data[idx+1][0] not in dur:
+            dur[data[idx+1][0]] = {}
+        print "d1: %d" % d[1]
+        print "data idx: %d" % data[idx+1][1]
+        dur[d[0]][data[idx+1][0]] = abs(d[1] - data[idx+1][1])
+        dur[data[idx+1][0]][d[0]] = abs(d[1] - data[idx+1][1])
+    with open("durations.csv", "w") as f:
+        f.write(" ___ ")
+        for header in dur.keys():
+            f.write(", "+str(header))
+        for d in dur:
+            for idx, r in enumerate(dur):
+                if idx==0:
+                    f.write(str(r))
+                if r in dur[d]:
+                    f.write(", "+str(dur[d][r]))
+                else:
+                    f.write(", 0")
+            f.write("\n")
+
+
 def main():
     # This is to fetch the data from the sparql endpoint
     #data = fetch_data_from_endpoint()
@@ -161,9 +186,11 @@ def main():
     #print_sparql_result(data)
     print_data_frames(data)
     data = get_only_first_validation_dataframe(data)
-    #clean_data = clean_the_data(data)
-    #print_sparql_result(clean_data)
-    do_clustering(data)
+    # data = buses_as_seq_ints(data)
+    # clean_data = clean_the_data(data)
+    # print_sparql_result(clean_data)
+    # do_clustering(data)
+    get_duration_between_stations(data)
 
 
 main()
