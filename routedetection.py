@@ -1,6 +1,7 @@
 
 from sparqlq import run_sparql_query
 
+from clust import do_clustering
 
 def fetch_data_from_endpoint():
     query = """
@@ -34,6 +35,7 @@ def fetch_data_from_endpoint():
 
     """
     res = run_sparql_query(query, endpoint="http://crtm.linkeddata.es/sparql")
+    return res
 
 
 def print_sparql_result(res):
@@ -41,5 +43,57 @@ def print_sparql_result(res):
         print r
 
 
+def buses_as_seq_ints(data):
+    stations = zip(*data)[0]
+    set_of_stations = set(stations)
+    unique_stations = list(set_of_stations)
+    mappings = {}
+    print "unique stations: "+str(unique_stations)
+    for idx, station in enumerate(unique_stations):
+        mappings[station] = idx * 1000000 + 99999999
+
+    for m in mappings:
+        print "%d => %d" % (m, mappings[m])
+
+    clean_data = []
+    for d in data:
+        old_station = d[0]
+        new_station = mappings[old_station]
+        clean_data.append([new_station, d[1]])
+    return clean_data
+
+
+def clean_the_data(data):
+    """
+    :param data: two dimensional each row contain a bus station and a timestamp
+    :return: bus station as a number and a timestamp as a number
+    """
+    clean_data = []
+    for r in data:
+        new_station = r[0].replace('http://crtm.linkeddata.es/recurso/transporte/validacion/dpaypoint/99_L447_P', '')
+        new_station = int(new_station) #* 1000 #* 1000000000
+        if new_station != 420:
+            continue
+        # 2016-03-10T22:56:26+02:00
+        new_time = "".join(r[1].split('T')[0].split('-'))
+        if new_time != '20160310':
+            continue
+        # new_time += "".join(r[1].split('T')[1].split('+')[0].split(':'))
+        new_time = "".join(r[1].split('T')[1].split('+')[0].split(':'))
+        new_time = int(new_time)
+        # if new_time < 20160310000000: # to filter the data for a single day
+        #     continue
+        clean_data.append([new_station, new_time])
+    #clean_data = buses_as_seq_ints(clean_data)
+    return clean_data
+
+
 def main():
-    fetch_data_from_endpoint()
+    res = fetch_data_from_endpoint()
+    # print_sparql_result(res)
+    clean_data = clean_the_data(res)
+    print_sparql_result(clean_data)
+    do_clustering(clean_data)
+
+
+main()
