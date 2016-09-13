@@ -1,7 +1,7 @@
 
 from sparqlq import run_sparql_query
-
 from clust import do_clustering
+from operator import itemgetter
 
 def fetch_data_from_endpoint():
     query = """
@@ -52,14 +52,28 @@ def buses_as_seq_ints(data):
     for idx, station in enumerate(unique_stations):
         mappings[station] = idx * 1000000 + 99999999
 
-    for m in mappings:
-        print "%d => %d" % (m, mappings[m])
+    # for m in mappings:
+    #     print "%d => %d" % (m, mappings[m])
 
     clean_data = []
     for d in data:
         old_station = d[0]
         new_station = mappings[old_station]
         clean_data.append([new_station, d[1]])
+    return clean_data
+
+
+def get_only_first_validation(data):
+    station_dict = {}
+    for d in data:
+        if d[0] in station_dict:
+            station_dict[d[0]] = min(d[1], station_dict[d[0]])
+        else:
+            station_dict[d[0]] = d[1]
+    clean_data = station_dict.items()
+    clean_data = sorted(clean_data, key=itemgetter(1))
+    print "\n\n\nclean data:*************"
+    print clean_data
     return clean_data
 
 
@@ -72,8 +86,8 @@ def clean_the_data(data):
     for r in data:
         new_station = r[0].replace('http://crtm.linkeddata.es/recurso/transporte/validacion/dpaypoint/99_L447_P', '')
         new_station = int(new_station) #* 1000 #* 1000000000
-        if new_station != 420:
-            continue
+        # if new_station != 420:
+        #     continue
         # 2016-03-10T22:56:26+02:00
         new_time = "".join(r[1].split('T')[0].split('-'))
         if new_time != '20160310':
@@ -84,7 +98,8 @@ def clean_the_data(data):
         # if new_time < 20160310000000: # to filter the data for a single day
         #     continue
         clean_data.append([new_station, new_time])
-    #clean_data = buses_as_seq_ints(clean_data)
+    # clean_data = buses_as_seq_ints(clean_data)
+    clean_data = get_only_first_validation(clean_data)
     return clean_data
 
 

@@ -6,13 +6,16 @@ import six
 
 colors = list(six.iteritems(matplot_colors.cnames))
 
+
 def do_clustering(data):
     """
     :param data: two dimensional array, each row with a stopbus and a datetime both represented as integers
     :return:
     """
-    num_of_clusters = 5
+    num_of_clusters = len(data)
     model = KMeans(n_clusters=num_of_clusters)
+    print len(data)
+    print len(data[0])
     model.fit(data)
     #bus_station_axis, time_axis = zip(*data)
     #plt.scatter(x[:5],y[:5])
