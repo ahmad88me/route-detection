@@ -109,8 +109,14 @@ def clean_the_data(data):
         if new_time != '20160310':
             continue
         # new_time += "".join(r[1].split('T')[1].split('+')[0].split(':'))
-        new_time = "".join(r[1].split('T')[1].split('+')[0].split(':'))
-        new_time = int(new_time)
+        #new_time = "".join(r[1].split('T')[1].split('+')[0].split(':'))
+        h, m, s = r[1].split('T')[1].split('+')[0].split(':')
+        s = int(s)
+        s += int(h)*60*60 + int(m)*60
+        new_time = s
+        print "before: "+str("".join(r[1].split('T')[1].split('+')[0].split(':')))
+        print "after: "+str(new_time)
+        #new_time = int(new_time)
         # if new_time < 20160310000000: # to filter the data for a single day
         #     continue
         clean_data.append([new_station, new_time])
